@@ -21,40 +21,48 @@ nparcompGrouping <- function(nparcomp.res, pval=0.05, capital_letter = FALSE){
   nparcomp.res_input <- nparcomp.res_input[,c(variable,value)]
   colnames(nparcomp.res_input) <- c("variable", "value")
 
-  nparcomp.res_input
-
   data_mean <- nparcomp.res_input %>%
     group_by(variable) %>%
     summarise(Mean = mean(value))
 
   data_mean <- data_mean[order(data_mean$Mean, decreasing = T),]
 
-  nparcom_sample <- unique(data_mean$variable)
+  nparcomp_sample <- unique(data_mean$variable)
 
-  for( i in 1 : length(nparcom_sample)){
-    if(i == 1){
-      group <- data.frame(str_detect(nparcomp.res_group$Comparison, nparcom_sample[i]))
-    }else{
-      group <- cbind(i=group, str_detect(nparcomp.res_group$Comparison, nparcom_sample[i]))
+  if(nrow(nparcomp.res_group) > 0){
+
+    for( i in 1 : length(nparcomp_sample)){
+      if(i == 1){
+        group <- data.frame(str_detect(nparcomp.res_group$Comparison, nparcomp_sample[i]))
+      }else{
+        group <- cbind(i=group, str_detect(nparcomp.res_group$Comparison, nparcomp_sample[i]))
+      }
+    }
+
+
+    colnames(group) <- nparcomp_sample
+    row.names(group) <- nparcomp.res_group$Comparison
+
+    grouping <- list()
+
+    for( i in 1:length(nparcomp_sample)){
+      A <- row.names(group)[group[,nparcomp_sample[i]]]
+      A <- unlist(str_split(A, " , "))
+      A <- gsub(" ", "",A)
+      A <- gsub("^p", "", A)
+      A <- gsub("[(]", "", A)
+      A <- gsub("[)]", "", A)
+      A <- unique(A)
+      grouping[[i]]  <- A[order(A)]
+    }
+
+  }else{
+    grouping <- list()
+    for(i in 1:length(nparcomp_sample)){
+      grouping[[i]] <- as.character(nparcomp_sample[i])
     }
   }
 
-  colnames(group) <- nparcom_sample
-  row.names(group) <- nparcomp.res_group$Comparison
-
-  grouping <- list()
-  for( i in 1:length(nparcom_sample)){
-    A <- row.names(group)[group[,nparcom_sample[i]]]
-    A <- unlist(str_split(A, " , "))
-    A <- gsub(" ", "",A)
-    A <- gsub("^p", "", A)
-    A <- gsub("[(]", "", A)
-    A <- gsub("[)]", "", A)
-    A <- unique(A)
-    grouping[[i]]  <- A[order(A)]
-  }
-
-  grouping
 
   for(i in length(grouping):1){
     if(is_empty(grouping[[i]])){
@@ -87,14 +95,14 @@ nparcompGrouping <- function(nparcomp.res, pval=0.05, capital_letter = FALSE){
 
   names(grouping) <- LETTERS[1:length(grouping)]
 
-  names(nparcom_sample) <- nparcom_sample
+  nparcom_group <- as.character(nparcomp_sample)
 
-  nparcom_group <- nparcom_sample
+  names(nparcom_group) <- as.character(nparcomp_sample)
 
   for(i in 1:length(nparcom_group )){
     nparcom_group [names(nparcom_group )[i]] <- ""
     for(j in 1:length(grouping)){
-      if(names(nparcom_group )[i] %in% grouping[[j]]){
+      if(names(nparcom_group)[i] %in% grouping[[j]]){
         nparcom_group [i] <- paste0(nparcom_group [i], names(grouping[j]))
       }
     }
@@ -104,13 +112,19 @@ nparcompGrouping <- function(nparcomp.res, pval=0.05, capital_letter = FALSE){
 
   while("" %in%  nparcom_group){
     not_group <- which(nparcom_group == "")[1]
-    front_group <- str_split(nparcom_group[1:not_group-1], "")
-    front_group <- unlist(front_group)
-    front_group_max <- max(which(LETTERS%in%front_group))
-    nparcom_group[not_group] <- LETTERS[front_group_max+1]
-
-    if(not_group+1 <= length(nparcom_group)){
-      for(i in length(LETTERS):2){
+    if(not_group != 1){
+      front_group <- str_split(nparcom_group[1:not_group-1], "")
+      front_group <- unlist(front_group)
+      front_group_max <- max(which(LETTERS%in%front_group))
+      nparcom_group[not_group] <- LETTERS[front_group_max+1]
+      if(not_group+1 <= length(nparcom_group)){
+        for(i in length(LETTERS):2){
+          nparcom_group[(not_group+1):length(nparcom_group)] <- gsub(LETTERS[i], LETTERS[i+1], nparcom_group[(not_group+1):length(nparcom_group)] )
+        }
+      }
+    }else{
+      nparcom_group[not_group] <- "A"
+      for(i in length(LETTERS):1){
         nparcom_group[(not_group+1):length(nparcom_group)] <- gsub(LETTERS[i], LETTERS[i+1], nparcom_group[(not_group+1):length(nparcom_group)] )
       }
     }
@@ -131,5 +145,6 @@ nparcompGrouping <- function(nparcomp.res, pval=0.05, capital_letter = FALSE){
   if(capital_letter == F){
     results$nparcom_group <- tolower(results$nparcom_group)
   }
+
   print(results[,-2])
 }
