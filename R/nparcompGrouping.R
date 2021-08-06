@@ -1,10 +1,4 @@
-require(dplyr)
-require(reshape2)
-require(nparcomp)
-require(stringr)
-require(rlang)
-
-nparcompGrouping <- function(nparcomp.res, pval=0.05, capital_letter = F){
+nparcompGrouping <- function(nparcomp.res, pval=0.05, capital_letter = FALSE){
 
   if(!is.list(nparcomp.res)) return(message("nparcomp.res is wrong"))
   if(is.null(nparcomp.res$Data.Info)) return(message("nparcomp.res is not include input data"))
