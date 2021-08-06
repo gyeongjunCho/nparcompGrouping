@@ -1,9 +1,3 @@
-require(dplyr)
-require(reshape2)
-require(nparcomp)
-require(stringr)
-require(rlang)
-
 nparcompGrouping <- function(nparcomp.res, pval=0.05, capital_letter = FALSE){
 
   if(!is.list(nparcomp.res)) return(message("nparcomp.res is wrong"))
@@ -21,7 +15,13 @@ nparcompGrouping <- function(nparcomp.res, pval=0.05, capital_letter = FALSE){
 
   nparcomp.res_group <- subset(nparcomp.res_group, p.Value > pval)
 
+  value <- as.character(nparcomp.res$input$formula)[2]
+  variable <- as.character(nparcomp.res$input$formula)[3]
+
+  nparcomp.res_input <- nparcomp.res_input[,c(variable,value)]
   colnames(nparcomp.res_input) <- c("variable", "value")
+
+  nparcomp.res_input
 
   data_mean <- nparcomp.res_input %>%
     group_by(variable) %>%

@@ -1,1 +1,7 @@
 exportPattern("^[[:alpha:]]+")
+import(dplyr)
+import(reshape2)
+import(nparcomp)
+import(stringr)
+import(rlang)
+
